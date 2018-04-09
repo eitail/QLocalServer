@@ -4,25 +4,33 @@ Server::Server(QObject *parent) : QObject(parent)
 {
     m_pServer = NULL;
     m_pSocket = NULL;
-    m_LocalTag = "445566778899";
+    m_LocalTag = "87654321";
 
     m_pServer = new QLocalServer(this);
-    if( m_pServer->isListening() ){
-        m_pServer->close();
-        m_pServer->deleteLater();
-    }
 
     if( !m_pServer->listen(m_LocalTag)){
         m_pServer->close();
         m_pServer->deleteLater();
+        //先移出socket name
+        m_pServer->removeServer(m_LocalTag);
+        //后删除指针重新实例化
         delete m_pServer;
         m_pServer = new QLocalServer(this);
+
         if( !m_pServer->listen(m_LocalTag)){
           qDebug() << m_pServer->errorString();
         }
+        else
+        {
+            qDebug() << " The server has been initialized. !!! 2 " << m_pServer->serverName();
+        }
+    }
+    else
+    {
+        qDebug() << " The server has been initialized. !!! 1 " << m_pServer->serverName();
     }
     connect(m_pServer,SIGNAL(newConnection()), this,SLOT(onNewConnection()));
-    qDebug() << " The server has been initialized. !!! ";
+
 }
 
 Server::~Server()
@@ -30,7 +38,9 @@ Server::~Server()
     if(m_pServer != NULL){
         m_pServer->close();
         m_pServer->deleteLater();
+        m_pServer->removeServer(m_LocalTag);
         delete m_pServer;
+        m_pServer = NULL;
     }
 }
 
